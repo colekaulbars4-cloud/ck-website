@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- ============================================================
+     Cole Kaulbars — personal portfolio
+     Single static file: HTML + inline CSS + a little vanilla JS.
+     No frameworks, no build step. Deploys to GitHub Pages as-is.
+     ============================================================ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cole Kaulbars — Building AI tools for community impact</title>
+<meta name="description" content="Cole Kaulbars — early-career builder making AI tools for community impact.">
+
+<!-- Fonts: Space Grotesk (headings/body) + Space Mono (labels). Loaded from Google Fonts. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ---- Design tokens (colors, etc.) kept in one place via CSS variables ---- */
+  :root{
+    --bg:#06080f;          /* deep near-black navy */
+    --bg2:#0b0f1c;         /* panel tone */
+    --ink:#eef1f8;         /* near-white text */
+    --muted:#8b94ad;       /* secondary text */
+    --line:#1b2236;        /* hairline borders */
+    --cyan:oklch(0.82 0.15 200);
+    --blue:oklch(0.65 0.18 255);
+    --indigo:oklch(0.62 0.2 285);
+    --glow:oklch(0.7 0.18 250 / .5);
+  }
+
+  /* ---- Resets ---- */
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}          /* native smooth scroll as a fallback */
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:"Space Grotesk",system-ui,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none}
+  .mono{font-family:"Space Mono",ui-monospace,monospace}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 40px;position:relative;z-index:1}
+
+  /* ---- Textured / gradient backdrop (fixed behind everything) ---- */
+  .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+  /* faint technical grid */
+  .bg-grid{position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--line) 1px,transparent 1px),
+      linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 80%);
+            mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 80%);
+    opacity:.5;
+  }
+  /* colored glows */
+  .bg-glow{position:absolute;border-radius:50%;filter:blur(120px);opacity:.5}
+  .g1{top:-180px;left:-120px;width:560px;height:560px;background:var(--indigo)}
+  .g2{top:140px;right:-160px;width:520px;height:520px;background:var(--cyan);opacity:.32}
+  .g3{bottom:-220px;left:30%;width:600px;height:600px;background:var(--blue);opacity:.28}
+
+  /* ---- Sticky top navigation ---- */
+  nav{position:sticky;top:0;z-index:20;background:rgba(6,8,15,.6);backdrop-filter:blur(14px) saturate(1.4);border-bottom:1px solid var(--line)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{font-family:"Space Mono",monospace;font-weight:700;font-size:15px;letter-spacing:.02em;
+    background:linear-gradient(90deg,var(--cyan),var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .nav-links{display:flex;gap:28px;font-size:13px}
+  .nav-links a{position:relative;color:var(--muted);font-family:"Space Mono",monospace;transition:color .2s}
+  .nav-links a::after{content:"";position:absolute;left:0;right:100%;bottom:-7px;height:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--indigo));transition:right .25s ease}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a:hover::after{right:0}
+
+  /* ---- Doc-style rows: a short label column on the left, content on the right ---- */
+  .row{display:grid;grid-template-columns:200px 1fr;gap:40px;padding:84px 0;border-bottom:1px solid var(--line)}
+  .row .label{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.06em;color:var(--cyan);text-transform:uppercase;padding-top:10px}
+  .row .label .n{display:block;font-size:34px;font-weight:700;line-height:1;margin-bottom:10px;
+    background:linear-gradient(160deg,var(--cyan),var(--indigo));-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.9}
+
+  /* ---- Hero / header ---- */
+  .hero-content{display:flex;align-items:center;gap:48px;justify-content:space-between}
+  .portrait-wrap{position:relative;flex-shrink:0}
+  .portrait-wrap::before{content:"";position:absolute;inset:-3px;border-radius:18px;
+    background:linear-gradient(150deg,var(--cyan),var(--indigo));filter:blur(14px);opacity:.7;transition:opacity .3s}
+  .portrait-wrap:hover::before{opacity:1}
+  .portrait{position:relative;width:190px;height:228px;object-fit:cover;border-radius:16px;display:block;border:1px solid rgba(255,255,255,.12)}
+  header .content h1{font-size:clamp(52px,9vw,108px);font-weight:700;letter-spacing:-.04em;line-height:.92;
+    background:linear-gradient(180deg,#fff 30%,#9fb4e8 130%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header .tag{font-size:clamp(19px,2.8vw,28px);color:var(--muted);margin-top:22px}
+  header .tag b{color:var(--cyan);font-weight:500}
+  header .badges{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px;font-family:"Space Mono",monospace;font-size:12px}
+  header .badge{font-family:inherit;font-size:12px;cursor:pointer;padding:8px 14px;border:1px solid var(--line);border-radius:999px;color:var(--muted);
+    background:rgba(255,255,255,.02);transition:.25s}
+  header .badge::after{content:" +";color:var(--cyan);opacity:.7}
+  header .badge:hover{border-color:var(--cyan);color:var(--ink);transform:translateY(-2px);box-shadow:0 8px 24px -10px var(--glow)}
+  header .badge[aria-expanded="true"]{border-color:var(--cyan);color:var(--ink);background:rgba(120,160,255,.08)}
+  header .badge[aria-expanded="true"]::after{content:" −"}
+  /* expandable explanation panel under the chips */
+  .badge-detail{margin-top:16px;max-width:46ch;padding:16px 18px;border:1px solid var(--line);border-left:3px solid var(--cyan);
+    border-radius:10px;background:rgba(255,255,255,.03);color:var(--muted);font-size:15px;line-height:1.55}
+
+  /* ---- About ---- */
+  .about p{font-size:clamp(19px,2.4vw,24px);max-width:62ch;line-height:1.55}
+  .about p + p{margin-top:22px;font-size:18px;color:var(--muted)}
+  .about p .hl{color:var(--cyan)}
+
+  /* ---- Projects ---- */
+  .proj{display:block;position:relative;border:1px solid var(--line);border-radius:16px;padding:28px;margin-bottom:16px;
+    background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,0));overflow:hidden;transition:.28s cubic-bezier(.2,.7,.2,1)}
+  .proj::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),var(--indigo));transform:scaleY(0);transform-origin:top;transition:transform .3s}
+  .proj:hover{border-color:rgba(120,160,255,.45);transform:translateY(-4px);box-shadow:0 24px 50px -24px var(--glow)}
+  .proj:hover::before{transform:scaleY(1)}
+  .proj-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px}
+  .proj h3{font-size:26px;font-weight:600;letter-spacing:-.01em;transition:color .2s}
+  .proj:hover h3{color:var(--cyan)}
+  .proj .arrow{font-family:"Space Mono",monospace;font-size:12px;color:var(--cyan);white-space:nowrap;transition:transform .25s}
+  .proj:hover .arrow{transform:translate(3px,-3px)}
+  .proj p{color:var(--muted);margin-top:10px;max-width:60ch}
+  .proj .stack{display:inline-flex;gap:8px;font-family:"Space Mono",monospace;font-size:11px;color:var(--cyan);margin-top:16px}
+  .proj .stack span{padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:rgba(120,160,255,.06)}
+  .add{font-family:"Space Mono",monospace;font-size:13px;color:var(--muted);margin-top:8px;padding:18px;border:1px dashed var(--line);border-radius:12px}
+
+  /* ---- Focus / building-toward list ---- */
+  .focus-list{list-style:none;display:flex;flex-direction:column;gap:0}
+  .focus-list li{display:flex;gap:20px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--line);font-size:clamp(18px,2.2vw,22px);color:var(--ink)}
+  .focus-list li:first-child{padding-top:0}
+  .focus-list .fk{flex-shrink:0;width:74px;font-family:"Space Mono",monospace;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--cyan);padding-top:4px}
+  .ethos{margin-top:26px;font-family:"Space Mono",monospace;font-size:13px;color:var(--muted)}
+  .ethos::before{content:"— ";color:var(--cyan)}
+  @media(max-width:720px){.focus-list li{flex-direction:column;gap:6px}.focus-list .fk{width:auto}}
+
+  /* ---- Contact links ---- */
+  .links{display:flex;flex-direction:column;gap:2px}
+  .links a{display:flex;justify-content:space-between;align-items:center;padding:20px 4px;border-bottom:1px solid var(--line);font-size:19px;transition:.25s}
+  .links a:hover{color:var(--cyan);padding-left:16px;border-color:var(--cyan)}
+  .links a .k{font-family:"Space Mono",monospace;font-size:12px;color:var(--muted);transition:.25s}
+  .links a:hover .k{color:var(--ink)}
+  footer{padding:60px 0 90px;font-family:"Space Mono",monospace;font-size:12px;color:var(--muted)}
+
+  /* ---- Scroll-reveal: elements slide up into place when they enter view.
+         Note: we animate TRANSFORM only (not opacity), so content is never
+         hidden if animations are paused — it just won't have slid yet. ---- */
+  .reveal{transform:translateY(26px)}
+  .reveal.in{transform:none;animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes rise{from{opacity:.35;transform:translateY(26px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.reveal{transform:none}.reveal.in{animation:none}}
+
+  /* ---- Mobile: stack the two columns ---- */
+  @media(max-width:720px){
+    .row{grid-template-columns:1fr;gap:18px;padding:56px 0}
+    .row .label{padding-top:0}
+    .row .label .n{font-size:28px}
+    .hero-content{flex-direction:column-reverse;align-items:flex-start;gap:30px}
+    .portrait{width:150px;height:180px}
+    .nav-links{gap:18px}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== Decorative background (grid + colored glows) ===== -->
+  <div class="bg-fx" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-glow g1"></div>
+    <div class="bg-glow g2"></div>
+    <div class="bg-glow g3"></div>
+  </div>
+
+  <!-- ===== NAVIGATION ===== -->
+  <nav>
+    <div class="wrap nav-inner">
+      <a href="#top" class="brand">CK_</a>
+      <div class="nav-links">
+        <a href="#about">about</a>
+        <a href="#focus">focus</a>
+        <a href="#projects">projects</a>
+        <a href="#contact">contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="top"></div>
+  <div class="wrap">
+
+    <!-- ===== HEADER / HERO ===== -->
+    <header class="row">
+      <div class="label reveal"><span class="n">00</span>index</div>
+      <div class="content hero-content">
+        <div class="reveal">
+          <h1>Cole Kaulbars</h1>
+          <p class="tag">Building <b>AI tools</b> for community impact.</p>
+          <div class="badges">
+            <button class="badge" type="button" aria-expanded="false" data-text="I'm 19 and I treat every day as reps — collect, organize, build, repeat. I'd rather learn by doing the hard thing now than wait until I feel ready.">19, learning fast</button>
+            <button class="badge" type="button" aria-expanded="false" data-text="I care about putting AI to work where it actually helps people, not just where it looks impressive. The aim is tools that give communities a real head start on what's coming.">AI for social good</button>
+            <button class="badge" type="button" aria-expanded="false" data-text="I learn by making things and shipping them, even small ones. Every build teaches me more than reading ever could — and recovering well from failure is part of the process.">Builder</button>
+          </div>
+          <div class="badge-detail" id="badgeDetail" hidden></div>
+        </div>
+        <div class="portrait-wrap reveal">
+          <img class="portrait" src="assets/cole.jpeg" alt="Cole Kaulbars">
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== ABOUT ===== -->
+    <section id="about" class="row about">
+      <div class="label reveal"><span class="n">01</span>about</div>
+      <div class="content">
+        <p class="reveal">I'm Cole — 19, and early in my journey building with AI. I started <span class="hl">less than a year ago</span> and I'm all in. My path here wasn't a straight line — I went through some hard chapters early, rebuilt myself from the ground up, and came out with one standard I hold to everything: <span class="hl">how you do one thing is how you do everything.</span></p>
+        <p class="reveal">Before this I worked across a few fields, including Speakpreneur and Ptolemy, and spoke on stages in front of hundreds of people about how real change comes from changing your daily habits. I build because I'd rather turn what I've lived through into something useful — and because I want to help people get ahead of the future instead of being left behind by it.</p>
+      </div>
+    </section>
+
+    <!-- ===== FOCUS / BUILDING TOWARD ===== -->
+    <section id="focus" class="row">
+      <div class="label reveal"><span class="n">02</span>focus</div>
+      <div class="content">
+        <ul class="focus-list">
+          <li class="reveal"><span class="fk">now</span>Learning AI seriously — deep enough to explain it simply to anyone.</li>
+          <li class="reveal"><span class="fk">train</span>Jiu jitsu and the work that builds discipline on and off the mat.</li>
+          <li class="reveal"><span class="fk">toward</span>Building toward something of my own — and getting the reps in first.</li>
+        </ul>
+        <p class="ethos reveal">Grounded in faith, growth, and honest work. Still building — not finished.</p>
+      </div>
+    </section>
+
+    <!-- ===== PROJECTS ===== -->
+    <section id="projects" class="row">
+      <div class="label reveal"><span class="n">03</span>projects</div>
+      <div class="content">
+        <!-- To add a project later, copy one <a class="proj"> block and edit the
+             title, description, link, and stack line. -->
+        <a class="proj reveal" href="https://github.com/colekaulbars4-cloud/volunteer-data-cleaner" target="_blank" rel="noopener">
+          <div class="proj-head">
+            <h3>Volunteer Data Cleaner</h3>
+            <span class="arrow">github ↗</span>
+          </div>
+          <p>A Python script that cleans messy volunteer sign-up data and summarizes total hours.</p>
+          <div class="stack"><span>python</span><span>data-cleaning</span></div>
+        </a>
+        <div class="add reveal">// more builds shipping this week — added here as I make them</div>
+      </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section id="contact" class="row">
+      <div class="label reveal"><span class="n">04</span>contact</div>
+      <div class="content links">
+        <a class="reveal" href="https://github.com/colekaulbars4-cloud" target="_blank" rel="noopener"><span>GitHub</span><span class="k">/colekaulbars4-cloud ↗</span></a>
+        <a class="reveal" href="https://www.linkedin.com/in/cole-kaulbars/" target="_blank" rel="noopener"><span>LinkedIn</span><span class="k">/in/cole-kaulbars ↗</span></a>
+        <a class="reveal" href="https://www.instagram.com/cole.kaulbars" target="_blank" rel="noopener"><span>Instagram</span><span class="k">@cole.kaulbars ↗</span></a>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="wrap">© 2026 Cole Kaulbars — built and deployed by hand.</footer>
+
+  <!-- ===== INTERACTIVE BITS (vanilla JS) ===== -->
+  <script>
+    // (1) SMOOTH SCROLL-TO-SECTION
+    // Every link whose href starts with "#" (nav + the "CK_" logo): when clicked,
+    // cancel the browser's instant jump and smoothly glide to the matching section.
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        var target = document.querySelector(this.getAttribute('href'));
+        if (!target) return;
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // (2) SCROLL-REVEAL
+    // Reveal elements (class "reveal") fade + slide in once they enter the
+    // viewport. We check each one's position against the window height on load
+    // and on every scroll; when the top of an element is within view, we add
+    // "in" (which fires its CSS animation) and stop tracking it.
+    var revealEls = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+    function showOnScroll() {
+      var trigger = window.innerHeight * 0.9;   // reveal when ~10% into view
+      revealEls = revealEls.filter(function (el) {
+        if (el.getBoundingClientRect().top < trigger) {
+          el.classList.add('in');
+          return false;   // drop it from the list — already revealed
+        }
+        return true;
+      });
+    }
+    showOnScroll();                                  // run once on load
+    window.addEventListener('scroll', showOnScroll, { passive: true });
+    window.addEventListener('resize', showOnScroll);
+
+    // (3) CLICKABLE BADGES
+    // Each chip in the hero holds its explanation in a data-text attribute.
+    // Clicking a chip shows that text in the shared panel below and marks the
+    // chip "open" (aria-expanded). Clicking the open chip again hides the panel.
+    var badgeDetail = document.getElementById('badgeDetail');
+    var badges = document.querySelectorAll('.badge');
+    badges.forEach(function (badge) {
+      badge.addEventListener('click', function () {
+        var isOpen = this.getAttribute('aria-expanded') === 'true';
+        // reset every chip to closed first
+        badges.forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+        if (isOpen) {
+          badgeDetail.hidden = true;             // it was open → close it
+        } else {
+          this.setAttribute('aria-expanded', 'true');
+          badgeDetail.textContent = this.getAttribute('data-text');
+          badgeDetail.hidden = false;            // show this chip's explanation
+        }
+      });
+    });
+  </script>
+</body>
+</html>
